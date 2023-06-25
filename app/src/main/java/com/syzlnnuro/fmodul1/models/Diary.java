@@ -7,18 +7,22 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.Date;
+
 @Entity(tableName = "diaries")
 public class Diary implements Parcelable {
 
-
     @PrimaryKey(autoGenerate = true)
-    private  int id;
+    private int id;
+
     @ColumnInfo
     private String title;
+
     @ColumnInfo
     private String content;
+
     @ColumnInfo
-    private String timestamp;
+    private Date timestamp;
 
     public int getId() {
         return id;
@@ -30,16 +34,17 @@ public class Diary implements Parcelable {
 
     public Diary() {}
 
-    public Diary(String title, String content, String timestamp) {
+    public Diary(String title, String content, Date timestamp) {
         this.title = title;
         this.content = content;
         this.timestamp = timestamp;
     }
 
     protected Diary(Parcel in) {
+        id = in.readInt();
         title = in.readString();
         content = in.readString();
-        timestamp = in.readString();
+        timestamp = new Date(in.readLong());
     }
 
     public static final Creator<Diary> CREATOR = new Creator<Diary>() {
@@ -70,11 +75,11 @@ public class Diary implements Parcelable {
         this.content = content;
     }
 
-    public String getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -94,8 +99,9 @@ public class Diary implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
         dest.writeString(title);
         dest.writeString(content);
-        dest.writeString(timestamp);
+        dest.writeLong(timestamp.getTime());
     }
 }

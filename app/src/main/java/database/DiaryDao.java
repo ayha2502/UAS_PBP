@@ -16,9 +16,9 @@ public interface DiaryDao {
     @Insert
     long[] insertDiaries(Diary...diaries);
     @Delete
-    int delete (Diary...diaries);
+    int deleteDiaries (Diary...diaries);
     @Update
-    int update(Diary...diaries);
+    int updateDiaries(Diary...diaries);
     @Query("SELECT * FROM diaries")
     LiveData<List<Diary>> getDiaries();
     @Query("SELECT * FROM diaries WHERE title LIKE :title")

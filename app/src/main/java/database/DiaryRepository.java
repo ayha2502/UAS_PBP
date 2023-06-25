@@ -1,45 +1,48 @@
 package database;
 
 import android.content.Context;
+import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
 
-import com.syzlnnuro.fmodul1.DiaryDetailsActivity;
-import com.syzlnnuro.fmodul1.MainActivity;
 import com.syzlnnuro.fmodul1.models.Diary;
 
+import java.util.Date;
 import java.util.List;
 
+import async.DeleteAsyncTask;
 import async.InsertAsyncTask;
+import async.UpdateAsyncTask;
+import database.DiaryDatabase;
 
 public class DiaryRepository {
     private DiaryDatabase diaryDatabase;
+    private LiveData<List<Diary>> allDiaries;
 
-    public DiaryRepository(Context context) {
-
-    }
-
-//    public DiaryRepository(MainActivity mainActivity) {
-//    }
-
-//    public DiaryRepository(DiaryDetailsActivity diaryDetailsActivity) {
-//
-//    }
-
-
-    public void DiaryDatabase(Context context){
+    public DiaryRepository(Context context){
         diaryDatabase = DiaryDatabase.getInstance(context);
+        allDiaries = diaryDatabase.getDiaryDao().getDiaries();
     }
-    public void insertDiaryTask(Diary diary){
+
+    public LiveData<List<Diary>> getAllDiaries() {
+        return allDiaries;
+    }
+
+    public void insertDiaryTask(String title, String content){
+        Date currentTime = new Date();
+        Diary diary = new Diary(title, content, currentTime);
+
         new InsertAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
     }
-    public void updateDiaryTask(Diary diary){
 
-    }
-    public LiveData<List<Diary>> retrieveDiaryTask(){
-        return diaryDatabase.getDiaryDao().getDiaries();
-    }
-    public void deleteDiaryTask(Diary diary){
+    public void updateDiaryTask(Diary diary) {
+        Date currentTime = new Date();
+        diary.setTimestamp(String.valueOf(currentTime.getTime())); // Mengatur timestamp di objek Diary
 
+        new UpdateAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
+    }
+
+    public void deleteDiary(Diary diary){
+        new DeleteAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
     }
 }

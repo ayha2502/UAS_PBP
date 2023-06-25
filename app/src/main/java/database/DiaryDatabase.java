@@ -15,12 +15,14 @@ public abstract class DiaryDatabase extends RoomDatabase {
     public static final String DATABASE_NAME = "diary_db";
     private static DiaryDatabase instance;
 
-    static DiaryDatabase getInstance(final Context context){
+    public static DiaryDatabase getInstance(final Context context){
         if (instance == null){
             instance = Room.databaseBuilder(context.getApplicationContext(),DiaryDatabase.class, DATABASE_NAME).build();
         }
         return instance;
     }
     public abstract  DiaryDao getDiaryDao();
+
+
 }
 

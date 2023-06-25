@@ -1,6 +1,8 @@
 package com.syzlnnuro.fmodul1.adapters;
 
-import android.content.Context;
+import static android.content.ContentValues.TAG;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,13 +16,15 @@ import com.syzlnnuro.fmodul1.models.Diary;
 
 import java.util.ArrayList;
 
+import utils.DateUtil;
+
 public class DiaryRecyclerViewAdapter extends RecyclerView.Adapter<DiaryRecyclerViewAdapter.ViewHolder> {
     private ArrayList<Diary> mDiary;
     private OnDiaryListener mOnDiaryListener;
-    private Context context;
+    //private Context context;
 
     public DiaryRecyclerViewAdapter(ArrayList<Diary> mDiary, OnDiaryListener mOnDiaryListener) {
-        this.context = context;
+        //this.context = context;
         this.mDiary = mDiary;
         this.mOnDiaryListener = mOnDiaryListener;
     }
@@ -40,7 +44,7 @@ public class DiaryRecyclerViewAdapter extends RecyclerView.Adapter<DiaryRecycler
         }
 
         @Override
-        public void onClick(View v) {
+        public void onClick(View view) {
             mOnDiaryListener.onDiaryClick(getAdapterPosition());
         }
     }
@@ -48,6 +52,7 @@ public class DiaryRecyclerViewAdapter extends RecyclerView.Adapter<DiaryRecycler
     public interface OnDiaryListener {
         void onDiaryClick(int position);
     }
+
 
     @NonNull
     @Override
@@ -58,9 +63,16 @@ public class DiaryRecyclerViewAdapter extends RecyclerView.Adapter<DiaryRecycler
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Diary diary = mDiary.get(position);
-        holder.title.setText(diary.getTitle());
-        holder.timestamp.setText(diary.getTimestamp());
+        try {
+            String month = mDiary.get(position).getTimestamp().substring(0,2);
+            month = DateUtil.getMonthFromNumber(month);
+            String year = mDiary.get(position).getTimestamp().substring(3);
+            String timestamp = month + " " + year;
+            holder.title.setText(mDiary.get(position).getTitle());
+            holder.timestamp.setText(timestamp);
+        }catch (NullPointerException e){
+            Log.e(TAG, "onBindViewHolde :"+e.getMessage());
+        }
     }
 
     @Override

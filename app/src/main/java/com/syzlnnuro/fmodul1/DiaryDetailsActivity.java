@@ -7,8 +7,11 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,10 +26,15 @@ import android.widget.Toast;
 import com.syzlnnuro.fmodul1.models.Diary;
 
 import database.DiaryRepository;
+import utils.DateUtil;
 
 public class DiaryDetailsActivity extends AppCompatActivity
-        implements View.OnTouchListener, GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, View.OnClickListener {
+        implements View.OnTouchListener, GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener, View.OnClickListener, TextWatcher {
 
+
+    public static final int REQUEST_CODE_UPDATE_DIARY = 1;
+    //public static final int REQUEST_CODE_UPDATE_DIARY = ;
     private static final String TAG = "DiaryDetailsActivity";
     private static final int EDIT_MODE_ENABLED = 1;
     private static final int EDIT_MODE_DISABLED = 0;
@@ -44,14 +52,13 @@ public class DiaryDetailsActivity extends AppCompatActivity
     private GestureDetector gestureDetector;
     private DiaryRepository diaryRepository;
     private Diary finalDiary;
+    private int diaryIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_diary_details);
 
-        Toolbar toolbar = findViewById(R.id.detailToolbar);
-        setSupportActionBar(toolbar);
 
         et_diary_content = findViewById(R.id.contentDiary);
         et_toolbar_edit = findViewById(R.id.title_edit);
@@ -77,6 +84,14 @@ public class DiaryDetailsActivity extends AppCompatActivity
             disableContentInteraction();
         }
         setListener();
+        Intent intent = getIntent();
+        if (intent.hasExtra("diary")) {
+            Diary diary = intent.getParcelableExtra("diary");
+            diaryIndex = intent.getIntExtra("diary_index", -1); // Mengambil nilai diaryIndex dari Intent
+            if (diary != null) {
+                // Menginisialisasi tampilan dengan diary yang ada
+            }
+        }
     }
 
     private void saveChanges(){
@@ -87,6 +102,12 @@ public class DiaryDetailsActivity extends AppCompatActivity
 
     private void saveNewDiary() {
         diaryRepository.insertDiaryTask(diary);
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("updated_diary", diary);
+
+        resultIntent.putExtra("diary_index", diaryIndex);
+        setResult(RESULT_OK, resultIntent);
+        finish();
     }
 
 
@@ -120,7 +141,7 @@ public class DiaryDetailsActivity extends AppCompatActivity
 
         diaryMode = EDIT_MODE_DISABLED;
         disableContentInteraction();
-        saveChanges();
+        //saveChanges();
         //bandingkan nilai diary baru dan lama
         String temp = et_diary_content.getText().toString();
         temp = temp.replace("\n","");
@@ -128,7 +149,7 @@ public class DiaryDetailsActivity extends AppCompatActivity
         if (temp.length()>0){
             finalDiary.setTitle(editView.getText().toString());
             finalDiary.setContent(et_diary_content.getText().toString());
-            String timestamp = "Juni 2023";
+            String timestamp = DateUtil.getCurrentTimestamp();
             finalDiary.setTimestamp(timestamp);
 
             if(!finalDiary.getContent().equals(diary.getContent()) || !finalDiary.getTitle().equals(diary.getTitle())){
@@ -143,6 +164,7 @@ public class DiaryDetailsActivity extends AppCompatActivity
         ib_check.setOnClickListener(this);
         titleView.setOnClickListener(this);
         ib_back.setOnClickListener(this);
+        editView.addTextChangedListener(this);
     }
 
     private void setDiaryProperties() {
@@ -229,31 +251,18 @@ public class DiaryDetailsActivity extends AppCompatActivity
 
     @Override
     public void onClick(View view) {
-//        switch (view.getId()) {
-//            case R.id.toolbar_check_button:
-//                disableEditMode();
-//                hideVirtualKeyboard();
-//                break;
-//            case R.id.title_view:
-//                enableEditMode();
-//                et_toolbar_edit.requestFocus();
-//                et_toolbar_edit.setSelection(et_toolbar_edit.length());
-//                break;
-//            case R.id.toolbar_back_button:
-//                finish();
-//                break;
-//        }
         int id = view.getId();
         if(id == R.id.toolbar_check_button){
-            disableEditMode();
             hideVirtualKeyboard();
-        } else if (id == R.id.title_view) {
+            disableEditMode();
+        }else if (id == R.id.title_view) {
             enableEditMode();
             et_toolbar_edit.requestFocus();
             et_toolbar_edit.setSelection(et_toolbar_edit.length());
-        } else if (id == R.id.toolbar_back_button) {
+        }else if (id == R.id.toolbar_back_button){
             finish();
         }
+
     }
 
     @Override
@@ -294,5 +303,20 @@ public class DiaryDetailsActivity extends AppCompatActivity
         if(diaryMode == EDIT_MODE_ENABLED){
             enableEditMode();
         }
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        titleView.setText(charSequence.toString());
+    }
+
+    @Override
+    public void afterTextChanged(Editable editable) {
+
     }
 }

@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.syzlnnuro.fmodul1.adapters.DiaryRecyclerViewAdapter;
@@ -49,11 +48,11 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setTitle("My Personal Diary");
-        setSupportActionBar(toolbar);
+        //setSupportActionBar(toolbar);
     }
 
     private void retrieveDiaryData() {
-        diaryRepository.retrieveDiaryTask().observe(this, new Observer<List<Diary>>() {
+        diaryRepository.getAllDiaries().observe(this, new Observer<List<Diary>>() {
             @Override
             public void onChanged(List<Diary> diaries) {
                 if (diaryList.size() > 0) {
@@ -80,10 +79,32 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
     };
 
     private void deleteDiary(Diary diary) {
-        diaryRepository.deleteDiaryTask(diary);
         diaryList.remove(diary);
         adapter.notifyDataSetChanged();
+        diaryRepository.deleteDiary(diary);
     }
+    private void updateDiary(Diary diary) {
+        Intent intent = new Intent(MainActivity.this, DiaryDetailsActivity.class);
+        intent.putExtra("diary", diary);
+        intent.putExtra("diary_page", diaryList.indexOf(diary));
+        startActivityForResult(intent, DiaryDetailsActivity.REQUEST_CODE_UPDATE_DIARY);
+        diaryRepository.updateDiaryTask(diary);
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == DiaryDetailsActivity.REQUEST_CODE_UPDATE_DIARY && resultCode == RESULT_OK && data != null) {
+            Diary updatedDiary = data.getParcelableExtra("updated_diary");
+            int diaryIndex = data.getIntExtra("diary_index", -1);
+
+            if (diaryIndex != -1 && updatedDiary != null) {
+                diaryList.set(diaryIndex, updatedDiary);
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
 
     private void initRecyclerView() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -103,6 +124,10 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
 
     @Override
     public void onDiaryClick(int position) {
-
+        //Toast.makeText(this, "Anda memilih diari ke-" + (position + 1), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(MainActivity.this, DiaryDetailsActivity.class);
+        intent.putExtra("diary", diaryList.get(position));
+        intent.putExtra("diary_page", position);
+        startActivityForResult(intent, DiaryDetailsActivity.REQUEST_CODE_UPDATE_DIARY);
     }
 }
