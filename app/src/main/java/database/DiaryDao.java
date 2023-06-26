@@ -23,4 +23,6 @@ public interface DiaryDao {
     LiveData<List<Diary>> getDiaries();
     @Query("SELECT * FROM diaries WHERE title LIKE :title")
     List<Diary> getDiaryWithCustomQuery(String title);
+
+
 }

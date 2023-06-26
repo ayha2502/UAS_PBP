@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import database.DiaryRepository;
+import utils.DateUtil;
 
 public class MainActivity extends AppCompatActivity implements DiaryRecyclerViewAdapter.OnDiaryListener, View.OnClickListener {
 
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
     private DiaryRecyclerViewAdapter adapter;
     private FloatingActionButton fab;
     private DiaryRepository diaryRepository;
+    private DateUtil dateUtil;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +54,13 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
     }
 
     private void retrieveDiaryData() {
+
+        for (int i=1; i<100;i++){
+            Diary diary = new Diary();
+            diary.setTitle("Diary ke-"+i);
+            diary.setTimestamp(String.valueOf(dateUtil));
+            diaryList.add(diary);
+        }
         diaryRepository.getAllDiaries().observe(this, new Observer<List<Diary>>() {
             @Override
             public void onChanged(List<Diary> diaries) {
@@ -81,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
     private void deleteDiary(Diary diary) {
         diaryList.remove(diary);
         adapter.notifyDataSetChanged();
+
         diaryRepository.deleteDiary(diary);
     }
     private void updateDiary(Diary diary) {
@@ -90,20 +100,20 @@ public class MainActivity extends AppCompatActivity implements DiaryRecyclerView
         startActivityForResult(intent, DiaryDetailsActivity.REQUEST_CODE_UPDATE_DIARY);
         diaryRepository.updateDiaryTask(diary);
     }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == DiaryDetailsActivity.REQUEST_CODE_UPDATE_DIARY && resultCode == RESULT_OK && data != null) {
-            Diary updatedDiary = data.getParcelableExtra("updated_diary");
-            int diaryIndex = data.getIntExtra("diary_index", -1);
-
-            if (diaryIndex != -1 && updatedDiary != null) {
-                diaryList.set(diaryIndex, updatedDiary);
-                adapter.notifyDataSetChanged();
-            }
-        }
-    }
+    //@Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == DiaryDetailsActivity.REQUEST_CODE_UPDATE_DIARY && resultCode == RESULT_OK && data != null) {
+//            Diary updatedDiary = data.getParcelableExtra("updated_diary");
+//            int diaryIndex = data.getIntExtra("diary_index", -1);
+//
+//            if (diaryIndex != -1 && updatedDiary != null) {
+//                diaryList.set(diaryIndex, updatedDiary);
+//                adapter.notifyDataSetChanged();
+//            }
+//        }
+//    }
 
 
     private void initRecyclerView() {

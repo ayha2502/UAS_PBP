@@ -14,37 +14,32 @@ public class Diary implements Parcelable {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
-
     @ColumnInfo
     private String title;
-
     @ColumnInfo
     private String content;
-
+//    @ColumnInfo
+//    private Date date;
     @ColumnInfo
-    private Date timestamp;
+    private String timestamp;
 
-    public int getId() {
-        return id;
+    public Diary() {
+
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public Diary() {}
-
-    public Diary(String title, String content, Date timestamp) {
+    public Diary(String title, String content, Date date, String timestamp) {
         this.title = title;
         this.content = content;
+        //this.date = date;
         this.timestamp = timestamp;
     }
 
-    protected Diary(Parcel in) {
+    public Diary(Parcel in) {
         id = in.readInt();
         title = in.readString();
         content = in.readString();
-        timestamp = new Date(in.readLong());
+        //date = (Date) in.readSerializable();
+        timestamp = in.readString();
     }
 
     public static final Creator<Diary> CREATOR = new Creator<Diary>() {
@@ -58,6 +53,17 @@ public class Diary implements Parcelable {
             return new Diary[size];
         }
     };
+
+    public Diary(Diary diary) {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getTitle() {
         return title;
@@ -75,19 +81,29 @@ public class Diary implements Parcelable {
         this.content = content;
     }
 
-    public Date getTimestamp() {
+//    public Date getDate() {
+//        //return date;
+//    }
+
+    public void setDate(Date date) {
+        //this.date = date;
+    }
+
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
     @Override
     public String toString() {
         return "Diary{" +
-                "title='" + title + '\'' +
+                "id=" + id +
+                ", title='" + title + '\'' +
                 ", content='" + content + '\'' +
+                //", date=" + date +
                 ", timestamp='" + timestamp + '\'' +
                 '}';
     }
@@ -102,6 +118,7 @@ public class Diary implements Parcelable {
         dest.writeInt(id);
         dest.writeString(title);
         dest.writeString(content);
-        dest.writeLong(timestamp.getTime());
+        //dest.writeSerializable(date);
+        dest.writeString(timestamp);
     }
 }

@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateUtil {
-    public static  String getCurrentTimestamp(){
+    public static String getCurrentTimestamp(){
         try{
             SimpleDateFormat dateFormat = new SimpleDateFormat("MM-yyyy");
             String currentDateTime = dateFormat.format(new Date());

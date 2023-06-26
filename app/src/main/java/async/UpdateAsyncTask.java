@@ -11,8 +11,9 @@ import database.DiaryDao;
 public class UpdateAsyncTask extends AsyncTask<Diary, Void, Void> {
     private static final String TAG = "UpdateAsyncTask";
     private DiaryDao mDiaryDao;
+    private DiaryDao diaryDao;
     public UpdateAsyncTask(DiaryDao dao){
-        mDiaryDao = dao;
+        this.diaryDao = diaryDao;
     }
     @Override
     protected Void doInBackground(Diary... diaries) {

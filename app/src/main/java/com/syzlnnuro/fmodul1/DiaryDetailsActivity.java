@@ -3,11 +3,11 @@ package com.syzlnnuro.fmodul1;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.text.Editable;
@@ -25,6 +25,9 @@ import android.widget.Toast;
 
 import com.syzlnnuro.fmodul1.models.Diary;
 
+import java.util.Date;
+import java.util.List;
+
 import database.DiaryRepository;
 import utils.DateUtil;
 
@@ -34,7 +37,6 @@ public class DiaryDetailsActivity extends AppCompatActivity
 
 
     public static final int REQUEST_CODE_UPDATE_DIARY = 1;
-    //public static final int REQUEST_CODE_UPDATE_DIARY = ;
     private static final String TAG = "DiaryDetailsActivity";
     private static final int EDIT_MODE_ENABLED = 1;
     private static final int EDIT_MODE_DISABLED = 0;
@@ -49,16 +51,17 @@ public class DiaryDetailsActivity extends AppCompatActivity
     private EditText editView;
     private int diaryMode;
     private boolean isNewDiary;
+    private DateUtil setDate;
     private GestureDetector gestureDetector;
     private DiaryRepository diaryRepository;
     private Diary finalDiary;
-    private int diaryIndex;
+    private Date date;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_diary_details);
-
 
         et_diary_content = findViewById(R.id.contentDiary);
         et_toolbar_edit = findViewById(R.id.title_edit);
@@ -73,43 +76,40 @@ public class DiaryDetailsActivity extends AppCompatActivity
 
         diaryRepository = new DiaryRepository(this);
 
+        diaryRepository.getAllDiaries().observe(this, new Observer<List<Diary>>() {
 
+            @Override
+            public void onChanged(List<Diary> diaries) {
+
+            }
+        });
         if (getIncomingIntent()) {
-            //Diary baru(edit mode)
+            // Diary baru (edit mode)
             setNewDiaryProperties();
             enableEditMode();
         } else {
-            //Diary Lama(view mode)
+            // Diary lama (view mode)
             setDiaryProperties();
             disableContentInteraction();
         }
         setListener();
-        Intent intent = getIntent();
-        if (intent.hasExtra("diary")) {
-            Diary diary = intent.getParcelableExtra("diary");
-            diaryIndex = intent.getIntExtra("diary_index", -1); // Mengambil nilai diaryIndex dari Intent
-            if (diary != null) {
-                // Menginisialisasi tampilan dengan diary yang ada
-            }
-        }
     }
 
-    private void saveChanges(){
-        if(isNewDiary){
+    private void saveChanges() {
+        if (isNewDiary) {
             saveNewDiary();
+        } else {
+            updateDiary();
         }
     }
 
     private void saveNewDiary() {
-        diaryRepository.insertDiaryTask(diary);
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra("updated_diary", diary);
-
-        resultIntent.putExtra("diary_index", diaryIndex);
-        setResult(RESULT_OK, resultIntent);
-        finish();
+        diaryRepository.insertDiaryTask(finalDiary);
     }
 
+    private void updateDiary() {
+        diaryRepository.updateDiaryTask(finalDiary);
+    }
 
     private void hideVirtualKeyboard() {
         InputMethodManager imm = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
@@ -118,7 +118,6 @@ public class DiaryDetailsActivity extends AppCompatActivity
             view = new View(this);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-
     }
 
     private void enableEditMode() {
@@ -141,21 +140,7 @@ public class DiaryDetailsActivity extends AppCompatActivity
 
         diaryMode = EDIT_MODE_DISABLED;
         disableContentInteraction();
-        //saveChanges();
-        //bandingkan nilai diary baru dan lama
-        String temp = et_diary_content.getText().toString();
-        temp = temp.replace("\n","");
-        temp = temp.replace("","");
-        if (temp.length()>0){
-            finalDiary.setTitle(editView.getText().toString());
-            finalDiary.setContent(et_diary_content.getText().toString());
-            String timestamp = DateUtil.getCurrentTimestamp();
-            finalDiary.setTimestamp(timestamp);
-
-            if(!finalDiary.getContent().equals(diary.getContent()) || !finalDiary.getTitle().equals(diary.getTitle())){
-                saveChanges();
-            }
-        }
+        saveChanges();
     }
 
     private void setListener() {
@@ -170,7 +155,7 @@ public class DiaryDetailsActivity extends AppCompatActivity
     private void setDiaryProperties() {
         et_toolbar_edit.setText(diary.getTitle());
         text_toolbar_view.setText(diary.getTitle());
-        et_diary_content.setText(diary.getTitle());
+        et_diary_content.setText(diary.getContent()); // Update this line
     }
 
     private void setNewDiaryProperties() {
@@ -178,10 +163,15 @@ public class DiaryDetailsActivity extends AppCompatActivity
         text_toolbar_view.setText("New Diary");
 
         diary = new Diary();
-        finalDiary = new Diary();
-        diary.setTitle("Diary Title");
-        finalDiary.setTitle("Diary Title");
+        finalDiary = new Diary(diary);
+        //diary.setDate(DateUtil.getCurrentTimestamp());
+        //finalDiary.setDate(DateUtil.getCurrentTimestamp());
+
+        diary.setContent(""); // Add this line to set the initial content
+        finalDiary.setContent(""); // Add this line to set the initial content
     }
+
+
 
     private boolean getIncomingIntent() {
         if (getIntent().hasExtra("diary")) {
@@ -200,7 +190,6 @@ public class DiaryDetailsActivity extends AppCompatActivity
     public boolean onTouch(View view, MotionEvent motionEvent) {
         return gestureDetector.onTouchEvent(motionEvent);
     }
-
 
     @Override
     public boolean onSingleTapConfirmed(@NonNull MotionEvent motionEvent) {
@@ -252,14 +241,39 @@ public class DiaryDetailsActivity extends AppCompatActivity
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if(id == R.id.toolbar_check_button){
+        if(view.getId()== R.id.toolbar_check_button) {
             hideVirtualKeyboard();
             disableEditMode();
+            // Mengambil data dari form input diary
+            String title = et_toolbar_edit.getText().toString().trim();
+            String content = et_diary_content.getText().toString().trim();
+
+            // Mengecek apakah input diary tidak kosong
+            if (!title.isEmpty() && !content.isEmpty()) {
+                // Membuat objek Diary baru
+                Diary diary = new Diary();
+                diary.setTitle(title);
+                diary.setContent(content);
+                diary.setDate(new Date());
+
+                // Memanggil metode insertDiaryTask() pada DiaryRepository untuk menyimpan diary ke database
+                diaryRepository.insertDiaryTask(diary);
+
+                // Menampilkan pesan berhasil
+                Toast.makeText(this, "Diary saved successfully", Toast.LENGTH_SHORT).show();
+
+                // Kembali ke MainActivity
+                finish();
+            } else {
+                // Menampilkan pesan error jika input diary kosong
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            }
+            saveChanges();
         }else if (id == R.id.title_view) {
             enableEditMode();
             et_toolbar_edit.requestFocus();
             et_toolbar_edit.setSelection(et_toolbar_edit.length());
-        }else if (id == R.id.toolbar_back_button){
+        } else if (id == R.id.toolbar_back_button) {
             finish();
         }
 
@@ -291,16 +305,16 @@ public class DiaryDetailsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-        outState.putInt("mode",diaryMode);
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("mode", diaryMode);
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         diaryMode = savedInstanceState.getInt("mode");
-        if(diaryMode == EDIT_MODE_ENABLED){
+        if (diaryMode == EDIT_MODE_ENABLED) {
             enableEditMode();
         }
     }

@@ -28,21 +28,19 @@ public class DiaryRepository {
         return allDiaries;
     }
 
-    public void insertDiaryTask(String title, String content){
-        Date currentTime = new Date();
-        Diary diary = new Diary(title, content, currentTime);
-
-        new InsertAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
-    }
-
     public void updateDiaryTask(Diary diary) {
-        Date currentTime = new Date();
-        diary.setTimestamp(String.valueOf(currentTime.getTime())); // Mengatur timestamp di objek Diary
 
         new UpdateAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
     }
 
     public void deleteDiary(Diary diary){
         new DeleteAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
+    }
+
+    public void insertDiaryTask(Diary diary) {
+//        Date currentTime = new Date();
+//        Diary diary = new Diary(title, content, currentTime);
+
+        new InsertAsyncTask(diaryDatabase.getDiaryDao()).execute(diary);
     }
 }
